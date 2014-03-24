@@ -7,43 +7,41 @@
 //
 
 #import "MTFontIconParser.h"
+#import "MTFontIconModel.h"
 
-NSString *MTFontIconParserFontKey = @"font-name";
-NSString *MTFontIconIconsKey = @"font-icons";
-NSString *MTFontIconIconNameKey = @"icon-name";
-NSString *MTFontIconIconCodeKey = @"icon-code";
+NSString * const MTFontIconIconsKey = @"font-icons";
 
-static NSString *kFileName = @"MTFontIcon";
-static NSString *kFileExtension = @"plist";
+NSString * const MTFontIconParserFontKey = @"font-name";
+NSString * const MTFontIconIconNameKey = @"icon-name";
+NSString * const MTFontIconIconCodeKey = @"icon-code";
+NSString * const MTFontIconBaselineAdjustementKey = @"baseline-adjustement";
+NSString * const MTFontIconScaleAdjustementKey = @"scale-adjustement";
 
 @implementation MTFontIconParser
 
-+ (NSDictionary *)parseFontIcons
++ (NSDictionary *)parseFontIconsFromDictionary:(NSDictionary *)dictionary
 {
-    return [self parseFontIconsFromArray:[self settingsArrayFromDefaultFile]];
+    return [self parseFontIconsFromArray:dictionary[MTFontIconIconsKey]];
 }
 
 + (NSDictionary *)parseFontIconsFromArray:(NSArray *)array
 {
     NSMutableDictionary *iconsDict = [[NSMutableDictionary alloc] init];
     [array enumerateObjectsUsingBlock:^(NSDictionary *dataDict, NSUInteger idx, BOOL *stop) {
+        MTFontIconModel *model = [[MTFontIconModel alloc] init];
         NSString *name = dataDict[MTFontIconIconNameKey];
-        NSString *code = dataDict[MTFontIconIconCodeKey];
-        [iconsDict setValue:code forKey:name];
+        model.name = name;
+        model.code = dataDict[MTFontIconIconCodeKey];
+        model.fontName = dataDict[MTFontIconParserFontKey];
+        if (dataDict[MTFontIconBaselineAdjustementKey]) {
+            model.baselineAdjustement = [dataDict[MTFontIconBaselineAdjustementKey] floatValue];
+        }
+        if (dataDict[MTFontIconScaleAdjustementKey]) {
+            model.scaleAdjustement = [dataDict[MTFontIconScaleAdjustementKey] floatValue];
+        }
+        iconsDict[name] = model;
     }];
     return [NSDictionary dictionaryWithDictionary:iconsDict];
-}
-
-+ (NSArray *)settingsArrayFromDefaultFile
-{
-    NSString *filePath = [[NSBundle mainBundle] pathForResource:kFileName ofType:kFileExtension];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
-        NSDictionary *settingsDict = [NSDictionary dictionaryWithContentsOfFile:filePath];
-        return settingsDict[MTFontIconIconsKey];
-    } else {
-        // Throw an exception?
-        return nil;
-    }
 }
 
 @end

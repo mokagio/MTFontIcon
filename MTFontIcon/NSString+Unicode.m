@@ -20,9 +20,9 @@
     NSUInteger length = [self length];
     NSUInteger intValue = 0;
     for (int i = 0; i < length; i++) {
-        char c = [self characterAtIndex:i];
-        int number = (int)c;
-        int realNumber = 0;
+        char c = [[self lowercaseString] characterAtIndex:i];
+        NSUInteger number = (NSUInteger)c;
+        NSUInteger realNumber = 0;
         NSUInteger numericShift = 48;
         NSUInteger charShift = 97;
         

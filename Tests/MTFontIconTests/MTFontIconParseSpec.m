@@ -12,24 +12,70 @@
 SPEC_BEGIN(MTFontIconParserSpec)
 
 describe(@"MTFontIconParser", ^{
-   
-    it(@"should parse am array of dictionaries in the standard format into a 'name:code' dictionary", ^{
-        NSString *anyIconName = @"an-icon";
-        NSString *anyIconCode = @"\ue000";
-        NSDictionary *anIconDict = @{MTFontIconIconNameKey: anyIconName,
-                                     MTFontIconIconCodeKey: anyIconCode};
-        NSString *anyIconName1 = @"another-icon";
-        NSString *anyIconCode1 = @"\ue001";
-        NSDictionary *anIconDict1 = @{MTFontIconIconNameKey: anyIconName1,
-                                      MTFontIconIconCodeKey: anyIconCode1};
-        NSArray *settings = @[anIconDict, anIconDict1];
+    __block NSString *anyIconName = @"an-icon";
+    __block NSString *anyIconCode = @"\ue000";
+    __block NSString *anyFontFileName = @"a-font-file-name";
+    __block CGFloat anyBaselineValue = 1.1;
+    __block CGFloat anyScaleValue = 2.2;
+    __block NSDictionary *anIconDict = @{
+                                         MTFontIconParserFontKey: anyFontFileName,
+                                         MTFontIconIconNameKey: anyIconName,
+                                         MTFontIconIconCodeKey: anyIconCode,
+                                         MTFontIconBaselineAdjustementKey: @(anyBaselineValue),
+                                         MTFontIconScaleAdjustementKey: @(anyScaleValue),
+                                         };
+    __block NSDictionary *settings = @{ @"font-icons": @[ anIconDict ] };
+    
+    __block NSDictionary *icons;
+    __block MTFontIconModel *model;
+    
+    beforeAll(^{
+        icons = [MTFontIconParser parseFontIconsFromDictionary:settings];
+        model = icons[anyIconName];
+    });
+    
+    it(@"should parse a dictionaries of configurations into a dictionary of MTFontIconModel instances", ^{
+        [icons enumerateKeysAndObjectsUsingBlock:^(NSString *key, id obj, BOOL *stop) {
+            BOOL isExpectedClass = [obj isKindOfClass:[MTFontIconModel class]];
+            [[theValue(isExpectedClass) should] beTrue];
+        }];
+    });
+    
+    it(@"should return a MTFontIconModel with the correct fontName prorperty", ^{
+        [[model.fontName should] equal:anyFontFileName];
+    });
+    
+    it(@"should return a MTFontIconModel with the correct code prorperty", ^{
+        [[model.code should] equal:anyIconCode];
+    });
+    
+    it(@"should return a MTFontIconModel with the correct baselineAdjustement prorperty", ^{
+        [[theValue(model.baselineAdjustement) should] equal:theValue(anyBaselineValue)];
+    });
+    
+    it(@"should return a MTFontIconModel with the correct baselineAdjustement prorperty", ^{
+        [[theValue(model.scaleAdjustement) should] equal:theValue(anyScaleValue)];
+    });
+    
+    describe(@"when parsing an icon dictionary without the optional values", ^{
+        __block NSDictionary *anIconDictWithoutOptionalValues = @{
+                                                                  MTFontIconParserFontKey: anyFontFileName,
+                                                                  MTFontIconIconNameKey: anyIconName,
+                                                                  MTFontIconIconCodeKey: anyIconCode,
+                                                                  };
+        __block MTFontIconModel *defaultModel = [[MTFontIconModel alloc] init];
         
-        NSDictionary *iconsDictionary = [MTFontIconParser parseFontIconsFromArray:settings];
+        beforeAll(^{
+            model = [MTFontIconParser parseFontIconsFromDictionary:@{ @"font-icons": @[ anIconDictWithoutOptionalValues ] }][anyIconName];
+        });
         
-        [[theValue([iconsDictionary count]) should] equal:theValue([settings count])];
+        it(@"should return a MTFontIconModel with the default baselineAdjustement prorperty", ^{
+            [[theValue(model.baselineAdjustement) should] equal:theValue(defaultModel.baselineAdjustement)];
+        });
         
-        [[iconsDictionary[anyIconName] should] equal:anyIconCode];
-        [[iconsDictionary[anyIconName1] should] equal:anyIconCode1];
+        it(@"should return a MTFontIconModel with the defauld baselineAdjustement prorperty", ^{
+            [[theValue(model.scaleAdjustement) should] equal:theValue(defaultModel.scaleAdjustement)];
+        });
     });
     
 });
